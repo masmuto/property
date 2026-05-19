@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Property {
+  id           String   @id @default(cuid())
+  title        String
+  description  String
+  price        Int      // in juta (millions IDR)
+  location     String
+  city         String
+  type         String   // Rumah, Apartemen, Tanah, Ruko
+  bedrooms     Int?
+  bathrooms    Int?
+  landArea     Int?     // in m2
+  buildingArea Int?    // in m2
+  image        String
+  featured     Boolean  @default(false)
+  status       String   @default("active") // active, sold, reserved
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  leads        Lead[]
+}
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  whatsapp     String
+  propertyType String?   // Jenis Properti: Rumah, Apartemen, Tanah, Ruko
+  location     String?   // Lokasi yang dicari
+  dp           String?   // DP / Uang Muka
+  promo        String?   // Kode promo / Promo yang diminta
+  propertyId   String?
+  property     Property? @relation(fields: [propertyId], references: [id])
+  message      String?
+  status       String    @default("new") // new, contacted, qualified, closed
+  createdAt    DateTime  @default(now())
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  whatsapp  String
+  role      String   @default("agent") // admin, agent
+  avatar    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SeoSetting {
+  id          String   @id @default("main")
+  siteName    String   @default("PropMart")
+  title       String   @default("PropMart - Temukan Properti Impian Anda")
+  description String   @default("Jual beli properti terpercaya di seluruh Indonesia. Rumah, apartemen, tanah, dan ruko dengan harga terbaik.")
+  keywords    String   @default("properti, jual beli rumah, apartemen, tanah, ruko, Indonesia, real estate, KPR")
+  ogImage     String   @default("/properties/hero-banner.png")
+  canonicalUrl String  @default("")
+  robots      String   @default("index, follow")
+  googleVerification String @default("")
+  updatedAt   DateTime @updatedAt
+}

@@ -79,8 +79,8 @@ export async function generateMetadata(): Promise<Metadata> {
       keywords,
       authors: [{ name: seo.siteName || 'PropMart' }],
       openGraph: {
-        title: seo.title || defaultMetadata.title as string,
-        description: seo.description || defaultMetadata.description as string,
+        title: seo.title || (defaultMetadata.title as string),
+        description: seo.description || (defaultMetadata.description as string),
         type: "website",
         siteName: seo.siteName || "PropMart",
         images: seo.ogImage
@@ -96,8 +96,8 @@ export async function generateMetadata(): Promise<Metadata> {
       },
       twitter: {
         card: "summary_large_image",
-        title: seo.title || defaultMetadata.title as string,
-        description: seo.description || defaultMetadata.description as string,
+        title: seo.title || (defaultMetadata.title as string),
+        description: seo.description || (defaultMetadata.description as string),
         images: seo.ogImage ? [seo.ogImage] : undefined,
       },
       robots: {

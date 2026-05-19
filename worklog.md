@@ -71,3 +71,26 @@ Stage Summary:
 - On actual mobile screens (≤430px), frame effect is removed for full-width display
 - Bottom navigation bar, detail header, and CTA bars all stay within the phone frame
 - Dialog/Sheet components properly sized for mobile container
+
+---
+Task ID: 4
+Agent: Main Agent
+Task: Fix Vercel build error - @prisma/client did not initialize yet
+
+Work Log:
+- Diagnosed root cause: Prisma client not generated before Next.js build attempts to resolve imports
+- Updated package.json: Added "postinstall": "prisma generate" and changed build script to "prisma generate && next build"
+- Updated prisma/schema.prisma: Added explicit output path "../node_modules/.prisma/client"
+- Updated src/lib/db.ts: Improved PrismaClient initialization with production-friendly settings and graceful connect error handling
+- Updated src/app/sitemap.ts: Added dynamic = 'force-dynamic', wrapped DB import in try-catch with fallback
+- Updated src/app/robots.ts: Added dynamic = 'force-dynamic', wrapped DB import in try-catch with fallback
+- layout.tsx generateMetadata already had try-catch - no changes needed
+- Tested full build: "prisma generate && next build" succeeds, all routes compile correctly
+- API routes rendered as ƒ (Dynamic), static pages as ○ (Static)
+
+Stage Summary:
+- Build error fixed by ensuring prisma generate runs before next build
+- postinstall script ensures Vercel runs prisma generate after npm install
+- All database-dependent routes marked as dynamic to prevent static generation failures
+- sitemap.ts and robots.ts have fallback when database is unavailable
+- Full build tested successfully
