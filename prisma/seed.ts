@@ -1,37 +1,44 @@
 import { db } from '../src/lib/db'
 
 async function main() {
-  // Clear existing data
+  console.log('🌱 Seeding database...')
+
+  // Clear existing data (order matters due to foreign keys)
   await db.lead.deleteMany()
   await db.property.deleteMany()
+  await db.seoSetting.deleteMany()
   await db.user.deleteMany()
 
   // Seed admin users
-  await db.user.createMany({
-    data: [
-      {
+  const users = await Promise.all([
+    db.user.create({
+      data: {
         name: 'Admin PropMart',
         email: 'admin@propmart.id',
         whatsapp: '81234567890',
         role: 'admin',
         active: true,
       },
-      {
+    }),
+    db.user.create({
+      data: {
         name: 'Rina Sari',
         email: 'rina@propmart.id',
         whatsapp: '81345678901',
         role: 'agent',
         active: true,
       },
-      {
+    }),
+    db.user.create({
+      data: {
         name: 'Budi Santoso',
         email: 'budi@propmart.id',
         whatsapp: '81456789012',
         role: 'agent',
         active: true,
       },
-    ],
-  })
+    }),
+  ])
 
   const properties = await db.property.createMany({
     data: [
@@ -128,7 +135,24 @@ async function main() {
     ],
   })
 
-  console.log(`✅ Seeded ${properties.count} properties, 3 users`)
+  // Seed default SEO settings
+  await db.seoSetting.upsert({
+    where: { id: 'main' },
+    update: {},
+    create: {
+      id: 'main',
+      siteName: 'PropMart',
+      title: 'PropMart - Temukan Properti Impian Anda',
+      description: 'Jual beli properti terpercaya di seluruh Indonesia. Rumah, apartemen, tanah, dan ruko dengan harga terbaik.',
+      keywords: 'properti, jual beli rumah, apartemen, tanah, ruko, Indonesia, real estate, KPR',
+      ogImage: '/properties/hero-banner.png',
+      canonicalUrl: '',
+      robots: 'index, follow',
+      googleVerification: '',
+    },
+  })
+
+  console.log(`✅ Seeded ${properties.count} properties, ${users.length} users, and default SEO settings`)
 }
 
 main()

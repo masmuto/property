@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { getServerClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -8,24 +9,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   let propertyEntries: MetadataRoute.Sitemap = []
 
   try {
-    const { db } = await import('@/lib/db')
+    const supabase = getServerClient()
 
     // Get SEO settings for canonical URL
-    const seo = await db.seoSetting.findUnique({ where: { id: 'main' } })
-    const effectiveBaseUrl = seo?.canonicalUrl || baseUrl
+    const { data: seo } = await supabase
+      .from('seo_settings')
+      .select('canonical_url')
+      .eq('id', 'main')
+      .maybeSingle()
+
+    const effectiveBaseUrl = seo?.canonical_url || baseUrl
 
     // Get all active properties
-    const properties = await db.property.findMany({
-      where: { status: 'active' },
-      select: { id: true, updatedAt: true },
-    })
+    const { data: properties } = await supabase
+      .from('properties')
+      .select('id, updated_at')
+      .eq('status', 'active')
 
-    propertyEntries = properties.map((property) => ({
-      url: `${effectiveBaseUrl}/property/${property.id}`,
-      lastModified: property.updatedAt,
-      changeFrequency: 'weekly' as const,
-      priority: 0.8,
-    }))
+    if (properties) {
+      propertyEntries = properties.map((property) => ({
+        url: `${effectiveBaseUrl}/property/${property.id}`,
+        lastModified: new Date(property.updated_at),
+        changeFrequency: 'weekly' as const,
+        priority: 0.8,
+      }))
+    }
 
     return [
       {

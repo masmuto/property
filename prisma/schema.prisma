@@ -7,8 +7,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Property {
@@ -26,24 +27,28 @@ model Property {
   image        String
   featured     Boolean  @default(false)
   status       String   @default("active") // active, sold, reserved
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
   leads        Lead[]
+
+  @@map("properties")
 }
 
 model Lead {
   id           String    @id @default(cuid())
   name         String
   whatsapp     String
-  propertyType String?   // Jenis Properti: Rumah, Apartemen, Tanah, Ruko
+  propertyType String?   @map("property_type") // Jenis Properti: Rumah, Apartemen, Tanah, Ruko
   location     String?   // Lokasi yang dicari
   dp           String?   // DP / Uang Muka
   promo        String?   // Kode promo / Promo yang diminta
-  propertyId   String?
+  propertyId   String?   @map("property_id")
   property     Property? @relation(fields: [propertyId], references: [id])
   message      String?
   status       String    @default("new") // new, contacted, qualified, closed
-  createdAt    DateTime  @default(now())
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  @@map("leads")
 }
 
 model User {
@@ -54,19 +59,23 @@ model User {
   role      String   @default("agent") // admin, agent
   avatar    String?
   active    Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("users")
 }
 
 model SeoSetting {
-  id          String   @id @default("main")
-  siteName    String   @default("PropMart")
-  title       String   @default("PropMart - Temukan Properti Impian Anda")
-  description String   @default("Jual beli properti terpercaya di seluruh Indonesia. Rumah, apartemen, tanah, dan ruko dengan harga terbaik.")
-  keywords    String   @default("properti, jual beli rumah, apartemen, tanah, ruko, Indonesia, real estate, KPR")
-  ogImage     String   @default("/properties/hero-banner.png")
-  canonicalUrl String  @default("")
-  robots      String   @default("index, follow")
-  googleVerification String @default("")
-  updatedAt   DateTime @updatedAt
+  id                 String   @id @default("main")
+  siteName           String   @default("PropMart") @map("site_name")
+  title              String   @default("PropMart - Temukan Properti Impian Anda")
+  description        String   @default("Jual beli properti terpercaya di seluruh Indonesia. Rumah, apartemen, tanah, dan ruko dengan harga terbaik.")
+  keywords           String   @default("properti, jual beli rumah, apartemen, tanah, ruko, Indonesia, real estate, KPR")
+  ogImage            String   @default("/properties/hero-banner.png") @map("og_image")
+  canonicalUrl       String   @default("") @map("canonical_url")
+  robots             String   @default("index, follow")
+  googleVerification String   @default("") @map("google_verification")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("seo_settings")
 }

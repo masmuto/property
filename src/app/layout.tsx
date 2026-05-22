@@ -61,10 +61,17 @@ const defaultMetadata: Metadata = {
 // Dynamic metadata generation from database
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const { db } = await import('@/lib/db')
-    const seo = await db.seoSetting.findUnique({ where: { id: 'main' } })
+    const { getServerClient, SeoSettingRow } = await import('@/lib/supabase')
+    const supabase = getServerClient()
+    const { data, error } = await supabase
+      .from('seo_settings')
+      .select('*')
+      .eq('id', 'main')
+      .maybeSingle()
 
-    if (!seo) return defaultMetadata
+    if (error || !data) return defaultMetadata
+
+    const seo = data as SeoSettingRow
 
     const keywords = seo.keywords
       ? seo.keywords.split(',').map((k) => k.trim())
@@ -77,16 +84,16 @@ export async function generateMetadata(): Promise<Metadata> {
       title: seo.title || defaultMetadata.title,
       description: seo.description || defaultMetadata.description,
       keywords,
-      authors: [{ name: seo.siteName || 'PropMart' }],
+      authors: [{ name: seo.site_name || 'PropMart' }],
       openGraph: {
         title: seo.title || (defaultMetadata.title as string),
         description: seo.description || (defaultMetadata.description as string),
         type: "website",
-        siteName: seo.siteName || "PropMart",
-        images: seo.ogImage
+        siteName: seo.site_name || "PropMart",
+        images: seo.og_image
           ? [
               {
-                url: seo.ogImage,
+                url: seo.og_image,
                 width: 1200,
                 height: 630,
                 alt: seo.title || "PropMart",
@@ -98,7 +105,7 @@ export async function generateMetadata(): Promise<Metadata> {
         card: "summary_large_image",
         title: seo.title || (defaultMetadata.title as string),
         description: seo.description || (defaultMetadata.description as string),
-        images: seo.ogImage ? [seo.ogImage] : undefined,
+        images: seo.og_image ? [seo.og_image] : undefined,
       },
       robots: {
         index: !isNoIndex,
@@ -106,15 +113,15 @@ export async function generateMetadata(): Promise<Metadata> {
       },
     }
 
-    if (seo.canonicalUrl) {
+    if (seo.canonical_url) {
       metadataObj.alternates = {
-        canonical: seo.canonicalUrl,
+        canonical: seo.canonical_url,
       }
     }
 
-    if (seo.googleVerification) {
+    if (seo.google_verification) {
       metadataObj.verification = {
-        google: seo.googleVerification,
+        google: seo.google_verification,
       }
     }
 

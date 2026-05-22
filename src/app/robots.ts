@@ -1,4 +1,5 @@
 import { MetadataRoute } from 'next'
+import { getServerClient } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
@@ -7,11 +8,16 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
   let canonicalUrl = 'https://propmart.id'
 
   try {
-    const { db } = await import('@/lib/db')
-    const seo = await db.seoSetting.findUnique({ where: { id: 'main' } })
+    const supabase = getServerClient()
+    const { data: seo } = await supabase
+      .from('seo_settings')
+      .select('robots, canonical_url')
+      .eq('id', 'main')
+      .maybeSingle()
+
     if (seo) {
       robotsValue = seo.robots
-      if (seo.canonicalUrl) canonicalUrl = seo.canonicalUrl
+      if (seo.canonical_url) canonicalUrl = seo.canonical_url
     }
   } catch {
     // Fallback when database is not available (e.g. during build)

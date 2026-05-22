@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { getServerClient, PropertyRow } from '@/lib/supabase'
 import { NextRequest, NextResponse } from 'next/server'
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 
@@ -18,9 +18,33 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Property ID required' }, { status: 400 })
     }
 
-    const property = await db.property.findUnique({ where: { id: propertyId } })
-    if (!property) {
+    const supabase = getServerClient()
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*')
+      .eq('id', propertyId)
+      .single()
+
+    if (error || !data) {
       return NextResponse.json({ error: 'Property not found' }, { status: 404 })
+    }
+
+    // Map snake_case to camelCase for PDF generation
+    const property = {
+      id: (data as PropertyRow).id,
+      title: (data as PropertyRow).title,
+      description: (data as PropertyRow).description,
+      price: (data as PropertyRow).price,
+      location: (data as PropertyRow).location,
+      city: (data as PropertyRow).city,
+      type: (data as PropertyRow).type,
+      bedrooms: (data as PropertyRow).bedrooms,
+      bathrooms: (data as PropertyRow).bathrooms,
+      landArea: (data as PropertyRow).land_area,
+      buildingArea: (data as PropertyRow).building_area,
+      image: (data as PropertyRow).image,
+      featured: (data as PropertyRow).featured,
+      status: (data as PropertyRow).status,
     }
 
     // Generate PDF brochure
